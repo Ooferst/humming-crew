@@ -12,10 +12,20 @@
 <p>{{ class }}</p>
 
 <a href="{% url 'main:create_products' %}">
-  <button>+ Add Products</button>
+  <button style="padding:8px 14px; border:none; border-radius:6px; background:#42A5F5; color:white; cursor:pointer;">+ Add Products</button>
 </a>
+<a href="{% url 'main:logout' %}">
+  <button style="padding:8px 14px; border:none; border-radius:6px; background:#ff6584; color:white; cursor:pointer;">Logout</button>
+</a>
+<h5>Sesi terakhir login: {{ last_login }}</h5>
 
 <hr>
+<a href="?filter=all">
+    <button type="button" style="padding:8px 14px; border:none; border-radius:6px; background:#42A5F5; color:white; cursor:pointer;" >All Articles</button>
+</a>
+<a href="?filter=my">
+    <button type="button" style="padding:8px 14px; border:none; border-radius:6px; background:#42A5F5; color:white; cursor:pointer;">My Articles</button>
+</a> 
 
 {% if not products_list %}
 <p>Belum ada data produk pada humming crew.</p>
@@ -37,7 +47,7 @@
 
   <p>{{ products.description|truncatewords:25 }}...</p>
 
-  <p><a href="{% url 'main:show_products' products.id %}"><button>Read More</button></a></p>
+  <p><a href="{% url 'main:show_products' products.id %}"><button style="padding:8px 14px; border:none; border-radius:6px; background:#42A5F5; color:white; cursor:pointer;">Read More</button></a></p>
 </div>
 
 <hr>

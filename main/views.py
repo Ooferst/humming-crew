@@ -3,8 +3,49 @@ from main.forms import ProductsForm
 from main.models import Products
 from django.http import HttpResponse
 from django.core import serializers
+from django.contrib import messages
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+import datetime
+from django.http import HttpResponseRedirect
+from django.urls import reverse
 
 # Create your views here.
+def logout_user(request):
+    logout(request)
+    response = HttpResponseRedirect(reverse('main:login'))
+    response.delete_cookie('last_login')
+    return response
+
+def login_user(request):
+    if request.method == 'POST':
+        form = AuthenticationForm(data=request.POST)
+
+        if form.is_valid():
+            user = form.get_user()
+            login(request, user)
+            response = HttpResponseRedirect(reverse("main:show_main"))
+            response.set_cookie('last_login', str(datetime.datetime.now()))
+            return response
+
+    else:
+        form = AuthenticationForm(request)
+    context = {'form': form}
+    return render(request, 'login.html', context)
+
+def register(request):
+    form = UserCreationForm()
+
+    if request.method == "POST":
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Your account has been successfully created!')
+            return redirect('main:login')
+    context = {'form':form}
+    return render(request, 'register.html', context)
+
 def show_json_by_id(request, news_id):
     try:
        products_list = Products.objects.get(pk=news_id)
@@ -30,29 +71,41 @@ def show_xml_by_id(request, news_id):
        return HttpResponse(xml_data, content_type="application/xml")
     except Products.DoesNotExist:
        return HttpResponse(status=404)
-
+   
+@login_required(login_url='/login')
 def show_main(request):
-    products_list = Products.objects.all()
+    filter_type = request.GET.get("filter", "all")  # default 'all'
+
+    if filter_type == "all":
+        products_list = Products.objects.all()
+    else:
+        products_list = Products.objects.filter(user=request.user)
+        
     context = {
         'app_name' : 'Humming Crew',
         'npm' : '2406432406',
         'name': 'Hafiz Nathan Vesaputra',
         'class': 'PBP F',
         'products_list': products_list,
+        'last_login': request.COOKIES.get('last_login', 'Never')
     }
 
     return render(request, "main.html", context)
 
+@login_required(login_url='/login')
 def create_products(request):
     form = ProductsForm(request.POST or None)
 
     if form.is_valid() and request.method == "POST":
-        form.save()
+        products_entry = form.save(commit = False)
+        products_entry.user = request.user
+        products_entry.save()
         return redirect('main:show_main')
 
     context = {'form': form}
     return render(request, "create_products.html", context)
 
+@login_required(login_url='/login')
 def show_products(request, id):
     products = get_object_or_404(Products, pk=id)
     products.increment_views()

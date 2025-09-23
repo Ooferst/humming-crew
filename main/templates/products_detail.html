@@ -12,7 +12,14 @@
 <img src="{{ products.thumbnail }}" alt="Products thumbnail" width="300">
 <br /><br />
 {% endif %}
-<p>Harga: {{ products.price }} Ribu rupiah</p>
+
+{% if products.user %}
+    <p>Author: {{ products.user.username }}</p>
+{% else %}
+    <p>Author: Anonymous</p>
+{% endif %}
+
+<p>Harga: Rp {{ products.price }}</p>
 <p>{{ products.description }}</p>
 
 {% endblock content %}

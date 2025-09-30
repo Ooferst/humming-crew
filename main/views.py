@@ -12,6 +12,24 @@ from django.http import HttpResponseRedirect
 from django.urls import reverse
 
 # Create your views here.
+def delete_products(request, id):
+    products = get_object_or_404(Products, pk=id)
+    products.delete()
+    return HttpResponseRedirect(reverse('main:show_main'))
+
+def edit_products(request, id):
+    products = get_object_or_404(Products, pk=id)
+    form = ProductsForm(request.POST or None, instance=products)
+    if form.is_valid() and request.method == 'POST':
+        form.save()
+        return redirect('main:show_main')
+
+    context = {
+        'form': form
+    }
+
+    return render(request, "edit_products.html", context)
+
 def logout_user(request):
     logout(request)
     response = HttpResponseRedirect(reverse('main:login'))

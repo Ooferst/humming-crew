@@ -17,4 +17,19 @@
 	{% include 'toast.html' %}
 	{% include 'modal.html' %}
 </body>
+<script>
+document.addEventListener('DOMContentLoaded', ()=>{
+  try {
+    if(localStorage.getItem('justLoggedOut') === '1'){
+      localStorage.removeItem('justLoggedOut');
+      if(typeof showToast === 'function'){
+        showToast('You have been logged out', '', 'success');
+      } else {
+        alert('You have been logged out');
+      }
+    }
+  } catch(e){ /* ignore storage errors */ }
+});
+</script>
+
 </html>

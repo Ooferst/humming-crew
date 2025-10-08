@@ -102,4 +102,40 @@
     </div>
   </div>
 </div>
+<script>
+document.addEventListener('DOMContentLoaded', ()=>{
+  const form = document.querySelector('form');
+  if(!form) return;
+
+  form.addEventListener('submit', async e=>{
+    e.preventDefault();
+    const csrf = form.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+    const fd = new FormData(form);
+
+    try {
+      const res = await fetch(window.location.href, {
+        method: 'POST',
+        headers: {'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': csrf},
+        body: fd
+      });
+      const data = await res.json().catch(()=>null);
+
+      if(res.ok && data?.success){
+        if(typeof showToast==='function') showToast('Success! Redirecting...', '', 'success');
+        else alert('Success! Redirecting...');
+        setTimeout(()=> location.href = data.redirect || '/', 700);
+      } else {
+        const msg = data?.error || 'Invalid input';
+        if(typeof showToast==='function') showToast(msg, '', 'error');
+        else alert(msg);
+      }
+    } catch(err){
+      console.error(err);
+      if(typeof showToast==='function') showToast('Network error', '', 'error');
+      else alert('Network error');
+    }
+  });
+});
+</script>
+
 {% endblock content %}

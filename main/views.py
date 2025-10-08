@@ -45,25 +45,38 @@ def add_products_entry_ajax(request):
 
 
 def delete_products(request, id):
-    products = get_object_or_404(Products, pk=id)
-    products.delete()
-    return HttpResponseRedirect(reverse('main:show_main'))
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        product = get_object_or_404(Products, pk=id)
+        product.delete()
+        return JsonResponse({'success': True})
+    return JsonResponse({'success': False}, status=400)
+
 
 def edit_products(request, id):
     products = get_object_or_404(Products, pk=id)
-    form = ProductsForm(request.POST or None, instance=products)
-    if form.is_valid() and request.method == 'POST':
-        form.save()
-        return redirect('main:show_main')
+    form = ProductsForm(request.POST or None, request.FILES or None, instance=products)
 
-    context = {
-        'form': form
-    }
+    if request.method == 'POST':
+        if form.is_valid():
+            form.save()
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'success': True})
+            return redirect('main:show_main')
+        else:
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'success': False, 'errors': form.errors}, status=400)
 
-    return render(request, "edit_products.html", context)
+    return render(request, "edit_products.html", {'form': form})
 
+@require_POST
 def logout_user(request):
     logout(request)
+    # AJAX -> JSON
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        resp = JsonResponse({'success': True, 'message': 'Logged out successfully', 'redirect': reverse('main:login')})
+        resp.delete_cookie('last_login')
+        return resp
+    # fallback -> redirect
     response = HttpResponseRedirect(reverse('main:login'))
     response.delete_cookie('last_login')
     return response
@@ -71,30 +84,38 @@ def logout_user(request):
 def login_user(request):
     if request.method == 'POST':
         form = AuthenticationForm(data=request.POST)
-
         if form.is_valid():
             user = form.get_user()
             login(request, user)
             response = HttpResponseRedirect(reverse("main:show_main"))
             response.set_cookie('last_login', str(datetime.datetime.now()))
+
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'success': True, 'redirect': reverse('main:show_main')})
             return response
 
+        # invalid form
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'success': False, 'error': 'Invalid username or password'})
     else:
         form = AuthenticationForm(request)
-    context = {'form': form}
-    return render(request, 'login.html', context)
+
+    return render(request, 'login.html', {'form': form})
 
 def register(request):
-    form = UserCreationForm()
-
-    if request.method == "POST":
-        form = UserCreationForm(request.POST)
+    form = UserCreationForm(request.POST or None)
+    if request.method == 'POST':
         if form.is_valid():
             form.save()
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'success': True, 'redirect': reverse('main:login')})
             messages.success(request, 'Your account has been successfully created!')
             return redirect('main:login')
-    context = {'form':form}
-    return render(request, 'register.html', context)
+        else:
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'success': False, 'error': 'Invalid form data'})
+
+    return render(request, 'register.html', {'form': form})
 
 def show_json_by_id(request, products_id):
     try:

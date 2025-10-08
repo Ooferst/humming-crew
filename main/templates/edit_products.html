@@ -54,4 +54,15 @@
     </div>
   </div>
 </div>
+
+<script>
+document.querySelector("form").addEventListener("submit", async e=>{
+  e.preventDefault();
+  const f=e.target, csrft=f.querySelector('[name=csrfmiddlewaretoken]').value;
+  const res=await fetch(location.href,{method:'POST', headers:{'X-Requested-With':'XMLHttpRequest','X-CSRFToken':csrft}, body:new FormData(f)});
+  const data = await res.json().catch(()=>null);
+  if(res.ok && data && data.success){ showToast('Product updated!','','success'); setTimeout(()=>location.href="{% url 'main:show_main' %}",700); }
+  else showToast((data&&data.error) || 'Update failed','','error');
+});
+</script>
 {% endblock %}

@@ -256,6 +256,112 @@ function initializeProductsPage() {
 initializeProductsPage();
 </script>
 <script>
+// Delete Products SCript
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+            cookie = cookie.trim();
+            if (cookie.startsWith(name + '=')) {
+                cookieValue = decodeURIComponent(cookie.split('=')[1]);
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Fungsi delete AJAX
+async function deleteProductAjax(url, articleEl) {
+    try {
+        const response = await fetch(url, {
+            method: "POST", // ← pakai POST biar aman di Django (DELETE sering ditolak CSRF)
+            headers: {
+                "X-Requested-With": "XMLHttpRequest",
+                "X-CSRFToken": getCookie("csrftoken"),
+            },
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+            showToast("Product deleted successfully!", "", "success");
+
+            // Hapus card dari tampilan
+            articleEl.classList.add("opacity-0", "scale-95");
+            setTimeout(() => articleEl.remove(), 200);
+        } else {
+            showToast("Failed to delete product.", "", "error");
+        }
+    } catch (error) {
+        console.error(error);
+        showToast("Something went wrong.", "", "error");
+    }
+}
+
+// Listener global buat semua tombol Delete
+document.addEventListener("click", function (e) {
+    const deleteBtn = e.target.closest("a.text-red-600");
+    if (!deleteBtn) return;
+
+    e.preventDefault();
+    const url = deleteBtn.getAttribute("href");
+    const articleEl = deleteBtn.closest("article");
+    deleteProductAjax(url, articleEl); // langsung hapus tanpa confirm
+});
+</script>
+
+<script>
+// Editproducts script
+(async()=>{
+  const form = document.querySelector('#productsForm') || document.querySelector('form');
+  if(!form) return console.warn('Form not found');
+
+  const csrft = ()=> (form.querySelector('[name=csrfmiddlewaretoken]')?.value || '');
+
+  const toast = (m,t='success')=>{
+    if(typeof showToast==='function') return showToast(m,'',t);
+    let c=document.getElementById('toast-container')||(()=>{let d=document.createElement('div');d.id='toast-container';d.className='fixed top-5 right-5 z-50';document.body.appendChild(d);return d;})();
+    let el=document.createElement('div'); el.className='px-4 py-2 rounded '+(t==='success'?'bg-green-600 text-white':'bg-red-600 text-white'); el.textContent=m; c.appendChild(el); setTimeout(()=>el.remove(),3000);
+  };
+
+  form.addEventListener('submit', async e=>{
+    e.preventDefault();
+    form.querySelectorAll('.ajax-field-error').forEach(n=>n.remove());
+    try{
+      const res = await fetch(window.location.href, {
+        method:'POST',
+        headers:{ 'X-Requested-With':'XMLHttpRequest','X-CSRFToken': csrft() },
+        body: new FormData(form)
+      });
+      const data = await res.json().catch(()=>null);
+      if(res.ok && data && data.success){
+        toast('Product updated!','success');
+        setTimeout(()=> location.href = "{% url 'main:show_main' %}",700);
+        return;
+      }
+      if(data && data.errors){
+        Object.entries(data.errors).forEach(([k,v])=>{
+          const el = form.querySelector('#'+k);
+          if(!el) return;
+          let p = el.nextElementSibling;
+          if(!p || !p.classList.contains('ajax-field-error')){ p=document.createElement('p'); p.className='ajax-field-error text-sm text-red-600 mt-1'; el.parentNode.insertBefore(p, el.nextSibling); }
+          p.textContent = Array.isArray(v)? v.join(', ') : v;
+        });
+        toast('Please fix the errors','error');
+      } else {
+        toast((data && data.error) || 'Update failed','error');
+      }
+    }catch(err){
+      console.error('submit error', err);
+      toast('Network error','error');
+    }
+  });
+})();
+</script>
+
+<script>
 // Add event listener to detect new products
 document.addEventListener('productsAdded', function() {
     // Refresh data without page reload

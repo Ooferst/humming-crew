@@ -83,3 +83,45 @@ Properti penting di item: flex-grow, flex-shrink, flex-basis, order, align-self.
 Kegunaan: membuat header, navbar, centering vertikal/horizontal, flexible card list, responsive items yang mengisi ruang.
 
 5. Nambah tailwind. Nambah fitur edit,hapus product , dan navigation bar. Nambah static (Css dan no-products image) lalu styling CSS nya.
+
+Tugas 6.
+1. Synchronous = Browser mengirim request ke server dan menunggu sampai server membalas sebelum bisa melakukan hal lain, Biasanya menyebabkan reload penuh pada halaman, Form login biasa tanpa JavaScript.
+	Asynchronous = Browser bisa melanjutkan aktivitas lain (seperti interaksi UI) sambil menunggu respon dari server, Tidak perlu reload seluruh halaman, hanya bagian tertentu yang diperbaru, Fetch API, jQuery AJAX, atau XMLHttpRequest pada login dengan toast.
+	
+2. User mengisi form dan klik Submit.
+
+JavaScript (AJAX) menangkap event itu, lalu mengirim HTTP request ke Django view (biasanya pakai fetch() dengan header X-Requested-With: XMLHttpRequest).
+
+Django view memproses data seperti biasa (validasi, autentikasi, CRUD, dll).
+
+Jika request-nya AJAX, Django mengembalikan JsonResponse berisi hasil (misalnya { success: True, redirect: "/main/" }).
+
+JavaScript di browser menerima JSON itu dan menampilkan hasil tanpa reload, seperti menampilkan toast atau mengganti isi halaman.
+
+3. User mengisi form dan klik Submit.
+
+JavaScript (AJAX) menangkap event itu, lalu mengirim HTTP request ke Django view (biasanya pakai fetch() dengan header X-Requested-With: XMLHttpRequest).
+
+Django view memproses data seperti biasa (validasi, autentikasi, CRUD, dll).
+
+Jika request-nya AJAX, Django mengembalikan JsonResponse berisi hasil (misalnya { success: True, redirect: "/main/" }).
+
+JavaScript di browser menerima JSON itu dan menampilkan hasil tanpa reload, seperti menampilkan toast atau mengganti isi halaman.
+
+4. Gunakan CSRF Token — selalu kirim token csrfmiddlewaretoken pada request POST.
+
+Gunakan HTTPS untuk mencegah pencurian data login.
+
+Validasi data di server (jangan hanya di sisi JavaScript).
+
+Batasi endpoint AJAX hanya menerima POST dan X-Requested-With: XMLHttpRequest.
+
+Gunakan JsonResponse yang aman, tanpa menampilkan data sensitif di respon.
+
+5. Memberi respons instan tanpa reload halaman.
+
+Transisi dan feedback (misalnya toast sukses/gagal) terasa lebih natural dan cepat.
+
+Meningkatkan interaktivitas dan kenyamanan pengguna.
+
+Membuat website terasa seperti aplikasi modern (SPA) walau masih pakai Django template.

@@ -99,4 +99,32 @@
         menu.classList.toggle("hidden");
       });
     </script>
+<script>
+document.addEventListener('DOMContentLoaded', ()=>{
+  const logoutUrl = "{% url 'main:logout' %}";
+  if(!logoutUrl) return;
+
+  const getCookie = name => (document.cookie.match(new RegExp('(^|; )' + name + '=([^;]*)'))||[])[2] || null;
+
+  document.querySelectorAll(`a[href="${logoutUrl}"]`).forEach(a=>{
+    a.addEventListener('click', e=>{
+      e.preventDefault();
+      try { localStorage.setItem('justLoggedOut','1'); } catch(_){}
+      // create hidden POST form and submit to avoid 405
+      const f = document.createElement('form');
+      f.method = 'POST';
+      f.action = logoutUrl;
+      f.style.display = 'none';
+      const csrf = getCookie('csrftoken');
+      if(csrf){
+        const i = document.createElement('input'); i.type='hidden'; i.name='csrfmiddlewaretoken'; i.value=csrf; f.appendChild(i);
+      }
+      document.body.appendChild(f);
+      f.submit();
+    });
+  });
+});
+</script>
+
+
   </nav>
